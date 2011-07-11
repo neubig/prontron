@@ -26,7 +26,7 @@ GetOptions(
 my %config = ( "fmin" => $FMIN, "fmax" => $FMAX, "emin" => $EMIN, "emax" => $EMAX, "word" => $WORD );
 
 if(@ARGV != 2) {
-    print STDERR "Usage: disc-decode.pl PFILE WFILE < INPUT > OUTPUT\n";
+    print STDERR "Usage: disc-decode.pl CANDIN FEATIN < INPUT > OUTPUT\n";
     exit 1;
 }
 

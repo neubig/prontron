@@ -33,7 +33,7 @@ GetOptions(
 my %config = ( "fmin" => $FMIN, "fmax" => $FMAX, "emin" => $EMIN, "emax" => $EMAX, "iters" => $ITERS, "word" => $WORD );
 
 if(@ARGV != 4) {
-    print STDERR "Usage: disc-train.pl FFILE EFILE PFILE WFILE\n";
+    print STDERR "Usage: disc-train.pl FFILE EFILE CANDIN FEATOUT\n";
     exit 1;
 }
 
