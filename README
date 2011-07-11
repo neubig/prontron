@@ -1,0 +1,92 @@
+prontron - PRONunciation percepTRON
+    by Graham Neubig
+    http://www.phontron.com/prontron/
+
+prontron is a tool for pronunciation estimation, mainly focusing on the pronunciation of Japanese unknown words, but written in a general way so it can be used for any string-to-string conversion task. I created it as a quick challenge to see if I could apply discriminative learning (the structured perceptron) to Japanese pronunciation estimation, but I am posting it in case anybody will find it useful.
+
+--- Download/Install ---
+
+Download the latest version from http://www.phontron.com/prontron
+
+The code of prontron is distributed according to the Common Public License v 1.0, and can be distributed freely according to this license.
+
+--- Estimating Pronunciations with prontron ---
+
+To estimate the pronunciation of words with prontron, you can use the models included in the model directory. If you have a file input.txt with one word per line, run the program as follows:
+
+$ prontron.pl model/model.dict model/model.feat < input.txt > output.txt
+
+This will output pronunciations, one per line, into output.txt.
+
+--- Training prontron ---
+
+Prontron training is a two step process. First, you have to build a dictionary of "subword/pronunciation" pairs, then run weight training.
+
+First, create two files train.word and train.pron that contain words and their pronunciations. Then run the alignment program to create a dictionary model/model.dict of subword/pronunciation pairs:
+
+$ mono-align.pl train.word train.pron model/model.dict
+
+You can add more entries to the dictionary if you notice that anything important is missing. Next, we train the feature weights model/model.feat using the perceptron algorithm.
+
+$ prontron-train.pl train.word train.pron model/model.dict model/model.feat
+
+That is it! Both of these programs have a number of training options (mins and maxes should be the same for
+
+Both:
+    -fmin  minimum length of the input unit (1)
+    -fmax  maximum length of the input unit (1)
+    -emin  minimum length of the output unit (0)
+    -emax  maximum length of the output unit (5)
+    -iters maximum number of iterations (10)
+    -word  use word units instead of characters
+
+mono-align.pl only:
+    -cut   all pairs that have a maximum posterior probability 
+           less than this will be trimmed (0.001)
+
+prontron-train.pl only:
+    -inarow  skip training examples we've gotten right
+             this many times
+    -recheck re-check skipped examples in this many times 
+
+--- How Does it Work? ---
+
+Prontron uses discriminative training based on the structured perceptron. This is good, because it lets the training many arbitrary features. The basic idea of the structured perceptron algorithm is:
+
+    * Given a set of feature weights h, for a certain word w find the highest scoring pronunciation p, and its set of features f(p).
+    * If p is not equal to the correct pronunciation p*, reduce the weights for features f(p) and increase weights of features of f(p*).
+    * Repeat this for every word in the corpus many times until we find good weights.
+
+In the case of pronunciation estimation, it is not too difficult to find p, f(p), and f(p*) using the Viterbi algorithm. For the current features in prontron, we use bigram and length features over four sequences:
+
+Word:	発音 	発表
+Pronunciation:	はつおん 	はっぴょう
+Seq1 -- Char/Pron. Pairs:	発/はつ 音/おん	発/はっ 表/ぴょう
+Seq2 -- Pron. Strings:	はつ　おん	はっ　ぴょう
+Seq3 -- Pron. Characters:	は　つ　お　ん	は　っ　ぴ　ょ　う
+Seq4 -- (Almost) Phonemes:	h a t u o n	h a x p i xyo u
+
+Examples of the features learned over each of these sequences are as follows:
+
+
+--- Contributors ---
+
+    * Graham Neubig (main developer)
+
+If you are interested in participating in the prontron project, particularly tackling any of the interesting challenges below, please send an email to neubig at gmail dot com.
+
+--- TODO List ---
+
+There are a bunch of possible improvements that would be quite interesting and useful:
+
+    * Regularization: Currently the perceptron is unregularized, but adding L1 or L2 regularization could reduce the number of features and increase performance.
+    * N-best Decoding: Currently prontron can only give one-best answers.
+    * Large-Margin Traning: Large-margin techniques such as support vector machines can be learned online. They are simple to implement, but require at least 2-best decoding.
+    * Other Loss Functions: Prontron currently only supports one-zero loss (examples are right, or not), but it would probably be better to do loss based on mora error rate. This is not, however, trivial to do.
+
+--- Revision History ---
+
+Version 0.1.0 (7/10/2011)
+
+    * Initial release!
+

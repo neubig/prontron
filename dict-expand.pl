@@ -44,6 +44,6 @@ while(<STDIN>) {
 
 foreach my $k (sort keys %prons) {
     foreach my $v (sort keys %{$prons{$k}}) {
-        print "$k\t$v\t1\n";
+        print "$k\t$v\n";
     }
 }

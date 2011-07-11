@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+# A program that performs monolingual alignment by jointly maximizing the
+# probability of two conditional models
+#  (similar to Percy Liang et al. "Alignment by Agreement")
+
 $| = 1;
 
 use strict;
@@ -13,20 +17,23 @@ binmode STDERR, ":utf8";
 
 # require "$Bin/digamma.pl";
 
-my ($FMIN, $FMAX, $EMIN, $EMAX) = (0,5,0,5);
+my ($FMIN, $FMAX, $EMIN, $EMAX) = (1,1,0,5);
 my $ITERS = 10;
 my $CUT = 1e-2;
+my $WORD = 0;
 GetOptions(
-    "fmin=i" => \$FMIN,
-    "fmax=i" => \$FMAX,
-    "emin=i" => \$EMIN,
-    "emax=i" => \$EMAX,
-    "iters=i" => \$ITERS,
-    "cut=f" => \$CUT
+    "fmin=i" => \$FMIN, # minimum length of the input
+    "fmax=i" => \$FMAX, # maximum length of the input
+    "emin=i" => \$EMIN, # minimum length of the output
+    "emax=i" => \$EMAX, # maximum length of the output
+    "iters=i" => \$ITERS, # maximum number of iterations
+    "cut=f" => \$CUT,  # all pairs that do not have a maximum posterior
+                       # probability of at least this much will be trimmed
+    "word" => \$WORD   # use word units instead of characters
 );
 
-if(@ARGV != 2) {
-    print STDERR "Usage: mono-align.pl [OPTIONS] FFILE EFILE\n";
+if(@ARGV != 3) {
+    print STDERR "Usage: mono-align.pl [OPTIONS] FFILE EFILE CANDOUT\n";
     exit 1;
 }
 
@@ -34,10 +41,10 @@ if(@ARGV != 2) {
 my %ids = ( "\t" => 0 );
 my (%fids,%eids);
 open FILE, "<:utf8", $ARGV[0] or die "$ARGV[0]: $!\n";
-my @fcorp = map { chomp; my @arr = map { $ids{$_} = keys %ids if not $ids{$_}; $fids{$_}++; $ids{$_} } split(/ /, $_); \@arr } <FILE>;
+my @fcorp = map { chomp; my @arr = map { $ids{$_} = keys %ids if not $ids{$_}; $fids{$_}++; $ids{$_} } ( $WORD ? split(/ /, $_) : split(//, $_) ); \@arr } <FILE>;
 close FILE;
 open FILE, "<:utf8", $ARGV[1] or die "$ARGV[1]: $!\n";
-my @ecorp = map { chomp; my @arr = map { $ids{$_} = keys %ids if not $ids{$_}; $eids{$_}++; $ids{$_} } split(/ /, $_); \@arr } <FILE>;
+my @ecorp = map { chomp; my @arr = map { $ids{$_} = keys %ids if not $ids{$_}; $eids{$_}++; $ids{$_} } ( $WORD ? split(/ /, $_) : split(//, $_) ); \@arr } <FILE>;
 close FILE;
 @fcorp == @ecorp or die "Corpus sizes don't match\n";
 my @names;
@@ -162,8 +169,11 @@ foreach my $iter ( 1 .. $ITERS ) {
 
 }
 
+open FILE, ">:utf8", $ARGV[2] or die "$ARGV[2]: $!\n";
 foreach my $id (sort keys %probs) {
     if($maxpost{$id} > $CUT) {
-        print printstr($id)."\t$probs{$id}\t$maxpost{$id}\n";
+        # print FILE printstr($id)."\t$probs{$id}\t$maxpost{$id}\n";
+        print FILE printstr($id)."\n"; # "\t$probs{$id}\t$maxpost{$id}\n";
     }
 }
+close;
