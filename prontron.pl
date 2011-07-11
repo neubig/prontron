@@ -45,5 +45,6 @@ close FILE;
 while(<STDIN>) {
     chomp;
     my ($feats, $seq, $score, $str) = decode($_,\%weights,\%cands,\%config);
+    $str =~ s/ //g if(not $WORD);
     print "$str\n";
 }
