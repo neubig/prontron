@@ -38,7 +38,12 @@ if(@ARGV != 4) {
 }
 
 open FILE, "<:utf8", $ARGV[0] or die "$ARGV[0]: $!\n";
-my @fcorp = map { chomp; $_ } <FILE>;
+my @fcorp = map { 
+    chomp; 
+    if($WORD) { s/(\S* \S*) 々 々/$1 $1/g; s/(.) 々/$1 $1/g; }
+    else      { s/(\S*\S*)々々/$1$1/g; s/(.)々/$1$1/g; }
+    $_ 
+} <FILE>;
 close FILE;
 open FILE, "<:utf8", $ARGV[1] or die "$ARGV[1]: $!\n";
 my @ecorp = map { chomp; $_ } <FILE>;

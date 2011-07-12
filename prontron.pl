@@ -26,7 +26,7 @@ GetOptions(
 my %config = ( "fmin" => $FMIN, "fmax" => $FMAX, "emin" => $EMIN, "emax" => $EMAX, "word" => $WORD );
 
 if(@ARGV != 2) {
-    print STDERR "Usage: disc-decode.pl CANDIN FEATIN < INPUT > OUTPUT\n";
+    print STDERR "Usage: prontron.pl CANDIN FEATIN < INPUT > OUTPUT\n";
     exit 1;
 }
 
@@ -44,6 +44,8 @@ close FILE;
 # perform ITERS iterations
 while(<STDIN>) {
     chomp;
+    if($WORD) { s/(\S* \S*) 々 々/$1 $1/g; s/(.) 々/$1 $1/g; }
+    else      { s/(\S*\S*)々々/$1$1/g; s/(.)々/$1$1/g; }
     my ($feats, $seq, $score, $str) = decode($_,\%weights,\%cands,\%config);
     $str =~ s/ //g if(not $WORD);
     print "$str\n";

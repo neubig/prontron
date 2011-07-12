@@ -41,7 +41,17 @@ if(@ARGV != 3) {
 my %ids = ( "\t" => 0 );
 my (%fids,%eids);
 open FILE, "<:utf8", $ARGV[0] or die "$ARGV[0]: $!\n";
-my @fcorp = map { chomp; my @arr = map { $ids{$_} = keys %ids if not $ids{$_}; $fids{$_}++; $ids{$_} } ( $WORD ? split(/ /, $_) : split(//, $_) ); \@arr } <FILE>;
+my @fcorp = map { 
+    chomp; 
+    # map repeated characters
+    if($WORD) { s/(\S* \S*) 々 々/$1 $1/g; s/(.) 々/$1 $1/g; }
+    else      { s/(\S*\S*)々々/$1$1/g; s/(.)々/$1$1/g; }
+    my @arr = map { 
+        $ids{$_} = keys %ids if not $ids{$_}; 
+        $fids{$_}++; $ids{$_} 
+    } ( $WORD ? split(/ /, $_) : split(//, $_) ); 
+    \@arr 
+} <FILE>;
 close FILE;
 open FILE, "<:utf8", $ARGV[1] or die "$ARGV[1]: $!\n";
 my @ecorp = map { chomp; my @arr = map { $ids{$_} = keys %ids if not $ids{$_}; $eids{$_}++; $ids{$_} } ( $WORD ? split(/ /, $_) : split(//, $_) ); \@arr } <FILE>;
